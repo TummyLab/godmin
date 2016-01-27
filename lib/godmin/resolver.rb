@@ -13,14 +13,23 @@ module Godmin
       @engine_wrapper = engine_wrapper
     end
 
-    def find_templates(name, prefix, partial, details)
+    def self.has_outside_app_allowed_param?
+      @has_outside_app_allowed_param = ActionView::PathResolver.instance_method(:find_templates).arity.abs == 5 unless defined?(@has_outside_app_allowed_param)
+      @has_outside_app_allowed_param
+    end
+
+    def find_templates(name, prefix, partial, details, outside_app_allowed = false)
       templates = []
 
       template_paths(prefix).each do |path|
         if templates.present?
           break
         else
-          templates = super(name, path, partial, details)
+          templates = if self.class.has_outside_app_allowed_param?
+            super(name, path, partial, details, outside_app_allowed)
+          else
+            super(name, path, partial, details)
+          end
         end
       end
 
